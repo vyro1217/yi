@@ -84,8 +84,8 @@ export class QuestionNLP {
             ? this.extractEntitiesDetailed(rawQuestion, normalizedQuestion)
             : undefined;
 
-        // Step 5: Classify intent
-        const { intent, intentConfidence } = this.classifyIntent(lowerQuestion);
+        // Step 5: Classify intent (top-K candidates)
+        const intentResult = this.classifyIntent(lowerQuestion);
 
         // Step 6: Classify domain
         const domain = this.classifyDomain(lowerQuestion);
@@ -131,8 +131,11 @@ export class QuestionNLP {
             verbs,
             entities,
             entitiesDetailed,
-            intent,
-            intentConfidence,
+                intent: intentResult.intent,
+                intentConfidence: intentResult.intentConfidence,
+                // expose candidates for downstream validation/inspection
+                // @ts-ignore runtime field
+                intentCandidates: intentResult.intentCandidates,
             domain,
             urgency,
             agency,
@@ -349,7 +352,7 @@ export class QuestionNLP {
     /**
      * Classify intent using keyword-based rules
      */
-    private classifyIntent(text: string): { intent: string; intentConfidence: number } {
+    private classifyIntent(text: string): { intent: string; intentConfidence: number; intentCandidates: Array<{ intent: string; confidence: number }> } {
         const intentPatterns = [
             { intent: 'decide', keywords: ['should', 'whether', 'or', 'choose', 'decide', '是否', '該不該', '還是', '選擇'], weight: 1 },
             { intent: 'timing', keywords: ['when', 'timing', 'time', 'now', 'later', '何時', '時機', '現在', '以後'], weight: 0.9 },
@@ -370,7 +373,9 @@ export class QuestionNLP {
                 }
             }
             if (matchCount > 0) {
-                const confidence = Math.min(1, (matchCount / pattern.keywords.length) * pattern.weight + 0.3);
+                // Score adjusted to favor multiple matches and pattern weight
+                const base = (matchCount / pattern.keywords.length);
+                const confidence = Math.min(1, base * pattern.weight + 0.25 + Math.min(0.2, base));
                 scores.push({ intent: pattern.intent, confidence });
             }
         }
@@ -378,11 +383,26 @@ export class QuestionNLP {
         // Sort by confidence
         scores.sort((a, b) => b.confidence - a.confidence);
 
+        // If nothing matched, return 'other' with default low confidence
         if (scores.length === 0) {
-            return { intent: 'other', intentConfidence: 0.5 };
+            return { intent: 'other', intentConfidence: 0.45, intentCandidates: [{ intent: 'other', confidence: 0.45 }] };
         }
 
-        return { intent: scores[0].intent, intentConfidence: scores[0].confidence };
+        // Keep top-K candidates (K=3)
+        const K = 3;
+        const topK = scores.slice(0, K);
+
+        // Validation logic: if top candidate is not sufficiently better than second, mark as low-confidence
+        let primary = topK[0];
+        if (topK.length > 1) {
+            const delta = topK[0].confidence - topK[1].confidence;
+            if (delta < 0.12) {
+                // Ambiguous — lower reported confidence
+                primary = { intent: primary.intent, confidence: Math.max(0.3, primary.confidence - 0.15) };
+            }
+        }
+
+        return { intent: primary.intent, intentConfidence: primary.confidence, intentCandidates: topK };
     }
 
     /**
@@ -536,11 +556,43 @@ export class QuestionNLP {
      * Normalize options (deduplicate, lowercase, trim)
      */
     private normalizeOptions(options: string[]): string[] {
-        const normalized = options.map(opt => 
-            opt.trim().toLowerCase().replace(/\s+/g, ' ')
-        );
-        
-        // Deduplicate
-        return [...new Set(normalized)];
+        // Trim, collapse whitespace, normalize punctuation and case
+        const normalized = options.map(opt => {
+            let s = opt.trim();
+            // Replace common Chinese punctuation with ASCII equivalents
+            s = s.replace(/[，、；：？！（）【】「」『』]/g, m => ' ');
+            s = s.replace(/[。]/g, '.');
+            // Collapse whitespace
+            s = s.replace(/\s+/g, ' ').trim();
+            // Lowercase for Latin scripts but keep CJK as-is where appropriate
+            if (/\p{Script=Latin}/u.test(s)) s = s.toLowerCase();
+            return s;
+        });
+
+        // Heuristic canonicalizations: map synonyms
+        const canonicalMap: { [k: string]: string } = {
+            'wait': 'wait',
+            'wait for more feedback': 'wait',
+            'wait for feedback': 'wait',
+            'launch': 'launch',
+            'release': 'launch',
+            'invest': 'invest',
+            'focus on retention': 'retention',
+            'focus on acquisition': 'acquisition'
+        };
+
+        const canonical = normalized.map(s => canonicalMap[s] || s);
+
+        // Deduplicate while preserving order
+        const seen = new Set<string>();
+        const dedup: string[] = [];
+        for (const v of canonical) {
+            if (!seen.has(v)) {
+                seen.add(v);
+                dedup.push(v);
+            }
+        }
+
+        return dedup;
     }
 }

@@ -73,8 +73,17 @@ result1.decision.risks.forEach(risk => {
 
 console.log('\n📊 Signals to Watch:');
 result1.decision.signals.forEach(signal => {
-    console.log(`  ${signal.type === 'positive' ? '✓' : signal.type === 'negative' ? '✗' : '○'} ${signal.description}`);
-    console.log(`    → ${signal.action}`);
+    // signal may be structured { type, description, action } or a string
+    if (!signal) return;
+    if (typeof signal === 'string') {
+        console.log(`  ○ ${signal}`);
+        return;
+    }
+    const desc = (signal.description || '').toString().trim();
+    const action = (signal.action || '').toString().trim();
+    const symbol = signal.type === 'positive' ? '✓' : signal.type === 'negative' ? '✗' : '○';
+    if (desc.length > 0) console.log(`  ${symbol} ${desc}`);
+    if (action.length > 0) console.log(`    → ${action}`);
 });
 
 // Show trace if available

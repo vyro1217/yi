@@ -72,6 +72,8 @@ export class QuestionLayer {
                 entitiesDetailed: enhanced.entitiesDetailed,
                 intent: enhanced.intent,
                 intentConfidence: enhanced.intentConfidence,
+                // @ts-ignore: include optional intentCandidates produced by NLP
+                intentCandidates: (enhanced as any).intentCandidates,
                 domain: enhanced.domain,
                 urgency: enhanced.urgency,
                 agency: enhanced.agency,

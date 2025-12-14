@@ -115,7 +115,23 @@ export class IChingEngine {
         ];
         const dontList = [lang === 'zh-TW' ? `避免強行改變當下穩定局面。` : `Avoid forcing change on the current stable situation.`];
         const risks = [lang === 'zh-TW' ? `主要風險來自本卦的限制：${primary.judgment}` : `Primary risk: ${primary.judgment}`, lang === 'zh-TW' ? `轉換到${relating.name}可能的挑戰：${transitionTemplate}` : `Transition challenges: ${transitionTemplate}`];
-        const signals = [lang === 'zh-TW' ? `觀察是否出現與之卦${relating.name}相符的外在變化。` : `Observe whether external conditions align with ${relating.name}.`, lang === 'zh-TW' ? `關注變爻（${keyLines.join(',') || '無'}）的發展。` : `Monitor outcomes at key lines (${keyLines.join(',') || 'none'}).`];
+        const signalsRaw = [
+            lang === 'zh-TW' ? `觀察是否出現與之卦${relating.name}相符的外在變化。` : `Observe whether external conditions align with ${relating.name}.`,
+            lang === 'zh-TW' ? `關注變爻（${keyLines.join(',') || '無'}）的發展。` : `Monitor outcomes at key lines (${keyLines.join(',') || 'none'}).`
+        ];
+
+        // Sanitize and map to structured signals with description/action
+        const signals = signalsRaw
+            .filter(s => s !== undefined && s !== null && String(s).trim().length > 0)
+            .map(s => {
+                const desc = String(s).trim();
+                const action = lang === 'zh-TW'
+                    ? (desc.includes('變爻') ? '記錄變爻發展並回報觀察結果' : '觀察外在變化並收集證據')
+                    : (desc.includes('key lines') ? 'Record outcomes at key lines and report' : 'Observe external conditions and collect evidence');
+                // determine type heuristically
+                const type: 'positive' | 'negative' | 'neutral' = desc.includes('無') || desc.includes('none') ? 'neutral' : 'neutral';
+                return { description: desc, action, type };
+            });
 
         return { summary, doList, dontList, risks, signalsToWatch: signals } as Advice;
     }

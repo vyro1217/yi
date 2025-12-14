@@ -38,7 +38,8 @@ export interface Advice {
     doList: string[];
     dontList: string[];
     risks: string[];
-    signalsToWatch: string[];
+    // signalsToWatch may be simple strings or structured signal objects
+    signalsToWatch: Array<string | { description: string; action?: string; type?: 'positive' | 'negative' | 'neutral' }>;
 }
 
 export interface Reading {
