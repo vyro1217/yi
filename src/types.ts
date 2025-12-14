@@ -103,6 +103,10 @@ export interface Signal {
     type: 'positive' | 'negative' | 'neutral';
     description: string;
     action?: string;
+    // Optional fields for KPI-sourced signals
+    kpiId?: string;
+    metric?: number;
+    confidence?: number;
 }
 
 // NLP Feature Types for Question Analysis

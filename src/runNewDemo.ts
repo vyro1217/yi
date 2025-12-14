@@ -200,25 +200,6 @@ function printResult(result: any) {
 
     console.log('\n' + '='.repeat(60));
 
-    // Export weak-labels (intentCandidates) if available
-    try {
-        const fs = require('fs');
-        const path = require('path');
-        const outDir = path.join(__dirname, '..', 'data', 'nlp', 'weak_labels');
-        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-
-        if ((result.question as any).intentCandidates && Array.isArray((result.question as any).intentCandidates)) {
-            const entry = {
-                timestamp: Date.now(),
-                question: result.question.rawQuestion,
-                intentCandidates: (result.question as any).intentCandidates
-            };
-            const outPath = path.join(outDir, 'weak_labels_output.jsonl');
-            fs.appendFileSync(outPath, JSON.stringify(entry) + '\n');
-        }
-    } catch (e) {
-        // ignore file write errors in demo
-    }
 }
 
 // 執行所有測試

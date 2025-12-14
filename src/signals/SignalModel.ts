@@ -1,5 +1,5 @@
 // Signal Model: Time-series KPI analysis and quantitative signal detection
-import { KPIDefinition, SignalResult } from '../types';
+import { KPIDefinition, SignalResult, Signal } from '../types';
 
 export interface KPITimeSeries {
     kpiId: string;
@@ -15,6 +15,24 @@ export class SignalModel {
         if (kpiDefs) {
             kpiDefs.forEach(def => this.kpiDefinitions.set(def.kpiId, def));
         }
+    }
+
+    /**
+     * Map a KPI time series evaluation into a structured Signal object
+     */
+    evaluateKPIAsSignal(series: KPITimeSeries): Signal {
+        const res = this.evaluateKPI(series);
+        const description = res.trigger || `${res.kpiId} signal: ${res.signal}`;
+        const action = res.signal === 'positive' ? 'Consider accelerating related actions' : res.signal === 'negative' ? 'Investigate and mitigate' : 'Monitor for changes';
+
+        return {
+            type: res.signal,
+            description,
+            action,
+            kpiId: res.kpiId,
+            metric: res.lastValue,
+            confidence: res.confidence
+        } as Signal;
     }
 
     /**

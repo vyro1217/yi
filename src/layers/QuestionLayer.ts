@@ -86,6 +86,24 @@ export class QuestionLayer {
                 options: metadata?.options,
                 optionsNormalized: enhanced.optionsNormalized
             };
+
+            // Export weak-labels if intentCandidates present (append to data/nlp/weak_labels/weak_labels_output.jsonl)
+            try {
+                const ic = (enhanced as any).intentCandidates;
+                if (ic && Array.isArray(ic) && ic.length > 0) {
+                    // write to data folder relative to project
+                    // Use require to avoid import cycles in runtime
+                    const fs = require('fs');
+                    const path = require('path');
+                    const outDir = path.join(__dirname, '..', 'data', 'nlp', 'weak_labels');
+                    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+                    const outPath = path.join(outDir, 'weak_labels_output.jsonl');
+                    const entry = { timestamp: Date.now(), question: rawQuestion, intentCandidates: ic };
+                    fs.appendFileSync(outPath, JSON.stringify(entry) + '\n');
+                }
+            } catch (e) {
+                // ignore
+            }
         } else {
             // Fallback to simple parsing
             result = {
@@ -100,9 +118,11 @@ export class QuestionLayer {
         }
 
         tracer?.add('Question', { 
-            parsed: result, 
+            parsed: result,
             nlpEnabled: !!this.nlp,
-            confidence: result.confidence 
+            confidence: result.confidence,
+            // include intentCandidates in trace if available
+            intentCandidates: (result as any).intentCandidates
         }, 'Question parsed successfully');
 
         return result;
