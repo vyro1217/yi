@@ -3,6 +3,7 @@ import { HexagramData, HexagramSemantics } from './InterpretationLayer';
 import { RuleEngineOutput } from './RuleEngineLayer';
 import { StructuredQuestion } from './QuestionLayer';
 import { Tracer } from '../tracing/Tracer';
+import { Signal } from '../types';
 
 export interface DecisionOutput {
     // 核心決策
@@ -38,11 +39,6 @@ export interface Risk {
     probability: number;   // 0~1
 }
 
-export interface Signal {
-    type: 'positive' | 'negative' | 'neutral';
-    description: string;
-    action: string;        // 出現此信號該做什麼
-}
 
 export class OutputLayer {
     // 生成決策輸出

@@ -105,6 +105,11 @@ function printResult(result: any) {
         console.log('\n【NLP 分析】');
         if (question.intent) {
             console.log(`  意圖: ${question.intent} (信心度: ${(question.intentConfidence || 0).toFixed(2)})`);
+            // Print intent candidates if available
+            if ((question as any).intentCandidates && Array.isArray((question as any).intentCandidates)) {
+                const cands = (question as any).intentCandidates as Array<{intent:string,confidence:number}>;
+                console.log(`    候選意圖: ${cands.map(c => `${c.intent}(${c.confidence.toFixed(2)})`).join(', ')}`);
+            }
         }
         if (question.domain) {
             console.log(`  領域: ${question.domain}`);
@@ -173,7 +178,7 @@ function printResult(result: any) {
     }
 
     // 7. 追蹤信號
-    if (decision.signals && decision.signals.length > 0) {
+        if (decision.signals && decision.signals.length > 0) {
         console.log('\n【追蹤信號】');
         const positive = decision.signals.filter((s: any) => s.type === 'positive');
         const negative = decision.signals.filter((s: any) => s.type === 'negative');
@@ -181,19 +186,39 @@ function printResult(result: any) {
 
         if (positive.length > 0) {
             console.log('  ✅ 正面信號:');
-            positive.forEach((s: any) => console.log(`     - ${s.description} (${s.metric})`));
+            positive.forEach((s: any) => console.log(`     - ${s.description}${s.action ? ` → ${s.action}` : ''}`));
         }
         if (negative.length > 0) {
             console.log('  ⚠️  負面信號:');
-            negative.forEach((s: any) => console.log(`     - ${s.description} (${s.metric})`));
+            negative.forEach((s: any) => console.log(`     - ${s.description}${s.action ? ` → ${s.action}` : ''}`));
         }
         if (neutral.length > 0) {
             console.log('  📊 中性指標:');
-            neutral.forEach((s: any) => console.log(`     - ${s.description} (${s.metric})`));
+            neutral.forEach((s: any) => console.log(`     - ${s.description}${s.action ? ` → ${s.action}` : ''}`));
         }
     }
 
     console.log('\n' + '='.repeat(60));
+
+    // Export weak-labels (intentCandidates) if available
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const outDir = path.join(__dirname, '..', 'data', 'nlp', 'weak_labels');
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+        if ((result.question as any).intentCandidates && Array.isArray((result.question as any).intentCandidates)) {
+            const entry = {
+                timestamp: Date.now(),
+                question: result.question.rawQuestion,
+                intentCandidates: (result.question as any).intentCandidates
+            };
+            const outPath = path.join(outDir, 'weak_labels_output.jsonl');
+            fs.appendFileSync(outPath, JSON.stringify(entry) + '\n');
+        }
+    } catch (e) {
+        // ignore file write errors in demo
+    }
 }
 
 // 執行所有測試

@@ -99,6 +99,12 @@ export interface SignalResult {
     confidence: number;
 }
 
+export interface Signal {
+    type: 'positive' | 'negative' | 'neutral';
+    description: string;
+    action?: string;
+}
+
 // NLP Feature Types for Question Analysis
 export interface DetailedEntity {
     type: 'person' | 'org' | 'money' | 'date' | 'place' | 'product' | 'topic' | 'temporal' | 'numeric' | 'option';
