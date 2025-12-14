@@ -9,7 +9,7 @@
     "start:demo": "node dist/runNewDemo.js",
     "start:enhanced": "node dist/runEnhancedDemo.js",
     "generate-weak-labels": "node dist/runNLPDemo.js > data/nlp/weak_labels/weak_labels_output.json || echo 'Run after build'",
-    "test": "node dist/runSample.js"
+    "test": "tsc && node -e \"const fs=require('fs');const path=require('path');const src=path.join(__dirname,'test');const dst=path.join(__dirname,'dist','test');fs.rmSync(dst,{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src)){if(f.endsWith('.js'))fs.copyFileSync(path.join(src,f),path.join(dst,f));}console.log('Copied test files to dist/test');\" && node dist/test/run-tests.js"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",
