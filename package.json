@@ -8,10 +8,15 @@
     "start:sample": "node dist/runSample.js",
     "start:demo": "node dist/runNewDemo.js",
     "start:enhanced": "node dist/runEnhancedDemo.js",
+    "generate-weak-labels": "node dist/runNLPDemo.js > data/nlp/weak_labels/weak_labels_output.json || echo 'Run after build'",
     "test": "node dist/runSample.js"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    
+  }
+  ,"dependencies": {
+    "nodejieba": "^2.5.0"
   }
 }

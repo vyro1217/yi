@@ -2,9 +2,18 @@ import { DecisionEngine } from './DecisionEngine';
 
 // 測試場景 1：專案決策
 function demo1() {
-    console.log('\n=== 場景 1：專案啟動決策（工程策略） ===\n');
+    console.log('\n=== 場景 1：專案啟動決策（工程策略 + NLP） ===\n');
 
-    const engine = new DecisionEngine();
+    const engine = new DecisionEngine({
+        nlp: {
+            extractVerbs: true,
+            extractEntities: true,
+            computeRiskScore: true,
+            detectTrend: true,
+            deterministicNormalization: true
+        }
+    });
+    
     const result = engine.run(
         '應該立刻啟動新專案，還是等到 Q2？',
         {
@@ -84,9 +93,44 @@ function printResult(result: any) {
     // 1. 問題
     console.log('【問題】');
     console.log(`  原始問題: ${question.rawQuestion}`);
+    if (question.normalizedQuestion) {
+        console.log(`  正規化: ${question.normalizedQuestion}`);
+    }
     console.log(`  目標: ${question.goal}`);
     console.log(`  時間框架: ${question.timeframe}`);
     console.log(`  風險偏好: ${question.riskPreference}`);
+
+    // 1b. NLP Features (if available)
+    if (question.intent || question.domain) {
+        console.log('\n【NLP 分析】');
+        if (question.intent) {
+            console.log(`  意圖: ${question.intent} (信心度: ${(question.intentConfidence || 0).toFixed(2)})`);
+        }
+        if (question.domain) {
+            console.log(`  領域: ${question.domain}`);
+        }
+        if (question.urgency !== undefined) {
+            console.log(`  緊急度: ${question.urgency.toFixed(2)}`);
+        }
+        if (question.agency !== undefined) {
+            console.log(`  主動權: ${question.agency.toFixed(2)}`);
+        }
+        if (question.emotionTone) {
+            console.log(`  情緒: ${question.emotionTone}`);
+        }
+        if (question.riskScore !== undefined) {
+            console.log(`  風險分數: ${question.riskScore.toFixed(2)}`);
+        }
+        if (question.confidence !== undefined) {
+            console.log(`  解析信心: ${question.confidence.toFixed(2)}`);
+        }
+        if (question.keywords && question.keywords.length > 0) {
+            console.log(`  關鍵詞: ${question.keywords.slice(0, 5).join(', ')}`);
+        }
+        if (question.entitiesDetailed && question.entitiesDetailed.length > 0) {
+            console.log(`  實體: ${question.entitiesDetailed.map((e: any) => `${e.text}(${e.type})`).join(', ')}`);
+        }
+    }
 
     // 2. 卦象
     console.log('\n【卦象】');

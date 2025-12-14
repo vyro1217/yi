@@ -97,3 +97,32 @@ export interface SignalResult {
     trigger?: string;
     confidence: number;
 }
+
+// NLP Feature Types for Question Analysis
+export interface DetailedEntity {
+    type: 'person' | 'org' | 'money' | 'date' | 'place' | 'product' | 'topic' | 'temporal' | 'numeric' | 'option';
+    text: string;
+    value?: number | string;  // normalized value for numeric/temporal entities
+    span?: [number, number];  // character position in original text
+}
+
+export interface IntentClassification {
+    intent: 'decide' | 'timing' | 'risk' | 'relationship' | 'strategy' | 'diagnose' | 'choose_one' | 'other';
+    confidence: number;       // 0-1
+    alternatives?: Array<{ intent: string; confidence: number }>;  // top-K alternatives
+}
+
+export interface NLPFeatures {
+    domain?: 'career' | 'love' | 'money' | 'health' | 'project' | 'business' | 'other';
+    intentClassification?: IntentClassification;
+    timeHorizon?: 'hours' | 'days' | 'weeks' | 'months' | 'year+';
+    urgency?: number;         // 0-1, how urgent is the question
+    riskTolerance?: number;   // 0-1, inferred risk tolerance
+    agency?: number;          // 0-1, how much control/agency user has
+    emotionTone?: 'calm' | 'anxious' | 'angry' | 'excited' | 'mixed';
+    entitiesDetailed?: DetailedEntity[];
+    optionsNormalized?: string[];  // normalized/deduplicated options
+    constraintsExtracted?: string[];  // extracted constraints from text
+    successMetrics?: string[];  // observable/measurable success indicators
+    normalizedQuestion?: string;  // deterministically normalized text
+}

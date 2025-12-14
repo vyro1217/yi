@@ -1,0 +1,136 @@
+易經 NLP 解析器測試
+
+================================================================================
+
+1. 專案時機決策（中文）
+--------------------------------------------------------------------------------
+原始問題: 我們應該立刻啟動新專案，還是等到 Q2？
+正規化:   我們應該立刻啟動新專案,還是等到 Q2?
+
+【分類結果】
+  Intent:        decide (信心: 0.41)
+  Domain:        project
+  Goal:          尋求指引
+  Timeframe:     mid
+
+【數值特徵】
+  Urgency:       0.30
+  Agency:        0.50
+  Risk Score:    0.50
+  Confidence:    0.60
+  Emotion:       calm
+  Trend?         No
+
+【關鍵詞】 我們應該立刻啟動新專案, 還是等到
+【動詞】   啟動
+
+【詳細實體】
+  - Q2 (temporal) [17:19]
+
+【正規化選項】 立即啟動 | 等到 q2 | 分階段啟動
+
+
+2. 投資選擇（英文）
+--------------------------------------------------------------------------------
+原始問題: Should we invest heavily in customer retention or focus on acquisition?
+正規化:   Should we invest heavily in customer retention or focus on acquisition?
+
+【分類結果】
+  Intent:        decide (信心: 0.52)
+  Domain:        money
+  Goal:          尋求指引
+  Timeframe:     mid
+
+【數值特徵】
+  Urgency:       0.30
+  Agency:        0.50
+  Risk Score:    0.30
+  Confidence:    0.80
+  Emotion:       calm
+  Trend?         No
+
+【關鍵詞】 invest, heavily, customer, retention, focus, acquisition
+【動詞】   invest
+【實體】   customer
+
+
+3. 危機處理（中文）
+--------------------------------------------------------------------------------
+原始問題: 生產環境 CPU 飆到 95%，該立即 rollback 還是先加機器？
+正規化:   生產環境 CPU 飆到 95%,該立即 rollback 還是先加機器?
+
+【分類結果】
+  Intent:        decide (信心: 0.41)
+  Domain:        other
+  Goal:          尋求指引
+  Timeframe:     immediate
+
+【數值特徵】
+  Urgency:       0.50
+  Agency:        0.50
+  Risk Score:    0.80
+  Confidence:    0.60
+  Emotion:       calm
+  Trend?         No
+
+【關鍵詞】 生產環境, cpu, 該立即, rollback, 還是先加機器
+【動詞】   尋求, seek
+
+【詳細實體】
+  - 95% (numeric) [12:15]
+
+【正規化選項】 立即 rollback | 橫向擴展 | 重啟服務 | 繼續調查
+
+
+4. 技術選型（英文）
+--------------------------------------------------------------------------------
+原始問題: How can I improve my team's productivity?
+正規化:   How can I improve my team's productivity?
+
+【分類結果】
+  Intent:        relationship (信心: 0.41)
+  Domain:        project
+  Goal:          improve my team's productivity
+  Timeframe:     mid
+
+【數值特徵】
+  Urgency:       0.30
+  Agency:        0.50
+  Risk Score:    0.50
+  Confidence:    0.60
+  Emotion:       calm
+  Trend?         No
+
+【關鍵詞】 how, improve, team, productivity
+【動詞】   尋求, seek
+【實體】   product, team
+
+
+5. 診斷問題（中文）
+--------------------------------------------------------------------------------
+原始問題: 為什麼我的產品銷量一直下滑？
+正規化:   為什麼我的產品銷量一直下滑?
+
+【分類結果】
+  Intent:        diagnose (信心: 0.40)
+  Domain:        project
+  Goal:          尋求指引
+  Timeframe:     mid
+
+【數值特徵】
+  Urgency:       0.30
+  Agency:        0.50
+  Risk Score:    0.50
+  Confidence:    0.40
+  Emotion:       calm
+  Trend?         No
+
+【關鍵詞】 為什麼我的產品銷量一直下滑
+【動詞】   尋求, seek
+【實體】   產品
+
+================================================================================
+
+✨ NLP 測試完成！
+
+提示：這些輸出可匯出為 data/nlp/weak_labels/ 下的訓練資料。

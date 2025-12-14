@@ -1,5 +1,4 @@
 // Rule Engine Layer: 推論/評分引擎
-import { HexagramData, HexagramSemantics } from './InterpretationLayer';
 import { HexagramStructure } from './HexagramLayer';
 import { StructuredQuestion } from './QuestionLayer';
 import { Tracer } from '../tracing/Tracer';
@@ -32,7 +31,7 @@ export interface RuleEngineOutput {
 }
 
 export class RuleEngineLayer {
-    private strategies: Record<StrategyProfile, MovingLineStrategy>;
+    private readonly strategies: Record<StrategyProfile, MovingLineStrategy>;
 
     constructor() {
         this.strategies = this.loadStrategies();
@@ -50,18 +49,21 @@ export class RuleEngineLayer {
         const movingCount = hexStruct.movingLines.length as 0 | 1 | 2 | 3 | 4 | 5 | 6;
         const strategy = this.strategies[profile][movingCount];
 
+        // Apply feature fusion: adjust weights based on NLP features
+        const adjustedWeights = this.featureFusion(strategy.weights, question);
+
         // 決定關鍵爻
         const keyLines = this.pickKeyLines(hexStruct.movingLines, movingCount);
 
-        // 決定焦點卦象
-        const focusHexagram = this.decideFocus(strategy.weights);
+        // 決定焦點卦象（使用調整後的權重）
+        const focusHexagram = this.decideFocus(adjustedWeights);
 
         // 計算信心度（依動爻數與問題清晰度）
         const confidence = this.calculateConfidence(movingCount, question);
 
         const output = {
             strategy,
-            weights: strategy.weights,
+            weights: adjustedWeights,
             keyLines,
             focusHexagram,
             confidence
@@ -70,13 +72,77 @@ export class RuleEngineLayer {
         tracer?.add('Rule', {
             movingCount,
             strategy: strategy.focus,
-            weights: strategy.weights,
+            originalWeights: strategy.weights,
+            adjustedWeights,
             keyLines,
             focusHexagram,
             confidence
         }, 'Rule engine analysis complete');
 
         return output;
+    }
+
+    /**
+     * Feature Fusion: Adjust strategy weights based on NLP features
+     * - intent=timing → increase mutual/relating weight (trend focus)
+     * - riskTolerance low → increase primary weight (conservative)
+     * - agency high → boost primary (user has control, focus on action)
+     * - urgency high → boost relating (look at outcome)
+     */
+    private featureFusion(baseWeights: FusionWeights, question: StructuredQuestion): FusionWeights {
+        const adjusted = { ...baseWeights };
+
+        // Intent-based adjustment
+        if (question.intent === 'timing' && question.isTrendDetected) {
+            // Timing questions benefit from trend analysis (mutual/relating)
+            adjusted.mutual *= 1.2;
+            adjusted.relating *= 1.1;
+            adjusted.primary *= 0.9;
+        }
+
+        if (question.intent === 'risk') {
+            // Risk questions focus on primary (current state)
+            adjusted.primary *= 1.15;
+            adjusted.relating *= 0.95;
+        }
+
+        // Risk tolerance (from riskScore or riskPreference)
+        const riskScore = question.riskScore || 0.5;
+        if (riskScore < 0.3 || question.riskPreference === 'conservative') {
+            // Conservative: focus on primary (守)
+            adjusted.primary *= 1.1;
+            adjusted.relating *= 0.9;
+        } else if (riskScore > 0.7 || question.riskPreference === 'aggressive') {
+            // Aggressive: focus on relating (change/outcome)
+            adjusted.relating *= 1.15;
+            adjusted.primary *= 0.95;
+        }
+
+        // Agency adjustment
+        if (question.agency && question.agency > 0.7) {
+            // High agency: user can act, focus on primary + relating
+            adjusted.primary *= 1.05;
+            adjusted.relating *= 1.05;
+            adjusted.mutual *= 0.9;
+        } else if (question.agency && question.agency < 0.3) {
+            // Low agency: observe trends, increase mutual
+            adjusted.mutual *= 1.15;
+            adjusted.primary *= 0.95;
+        }
+
+        // Urgency adjustment
+        if (question.urgency && question.urgency > 0.7) {
+            // High urgency: focus on relating (outcome/result)
+            adjusted.relating *= 1.1;
+        }
+
+        // Normalize weights to sum to 1.0
+        const total = adjusted.primary + adjusted.relating + adjusted.mutual;
+        adjusted.primary /= total;
+        adjusted.relating /= total;
+        adjusted.mutual /= total;
+
+        return adjusted;
     }
 
     // 選關鍵爻（朱熹派/工程派策略）
@@ -109,19 +175,30 @@ export class RuleEngineLayer {
     }
 
     private calculateConfidence(count: number, question: StructuredQuestion): number {
-        // 1 動最清晰（0.9），3~4 動不穩定（0.5~0.6），0 動看卦辭（0.7）
-        let base = 0.7;
-        if (count === 1) base = 0.9;
-        else if (count === 2) base = 0.8;
-        else if (count === 3) base = 0.6;
-        else if (count === 4) base = 0.5;
-        else if (count === 5 || count === 6) base = 0.55;
+        const baseByCount: Record<number, number> = {
+            0: 0.7,
+            1: 0.9,
+            2: 0.8,
+            3: 0.6,
+            4: 0.5,
+            5: 0.55,
+            6: 0.55
+        };
 
-        // 問題清晰度加成
-        if (question.goal && question.context) base += 0.05;
-        if (question.options && question.options.length > 0) base += 0.05;
+        let base = baseByCount[count] ?? 0.7;
 
-        return Math.min(base, 1.0);
+        // Aggregate adjustments in one pass to reduce branching complexity
+        let adjustment = 0;
+        if (question.goal && question.context) adjustment += 0.05;
+        if (question.options && question.options.length > 0) adjustment += 0.05;
+        if (question.intentConfidence && question.intentConfidence > 0.7) adjustment += 0.03;
+        if (question.confidence && question.confidence > 0.7) adjustment += 0.02;
+        if (question.urgency && question.urgency > 0.7) adjustment -= 0.02;
+        if (question.agency && question.agency > 0.7) adjustment += 0.02;
+
+        base += adjustment;
+
+        return Math.min(base, 1);
     }
 
     // 載入策略檔案
@@ -129,17 +206,17 @@ export class RuleEngineLayer {
         return {
             // 朱熹派（傳統）
             zhuxi: {
-                0: { focus: 'judgment', weights: { primary: 1.0, relating: 0.0, mutual: 0.0 } },
+                0: { focus: 'judgment', weights: { primary: 1, relating: 0, mutual: 0 } },
                 1: { focus: 'line', weights: { primary: 0.7, relating: 0.2, mutual: 0.1 } },
                 2: { focus: 'both-lines', weights: { primary: 0.6, relating: 0.3, mutual: 0.1 } },
                 3: { focus: 'transition', weights: { primary: 0.4, relating: 0.4, mutual: 0.2 } },
                 4: { focus: 'relating', weights: { primary: 0.3, relating: 0.5, mutual: 0.2 } },
                 5: { focus: 'major-change', weights: { primary: 0.2, relating: 0.7, mutual: 0.1 } },
-                6: { focus: 'complete-change', weights: { primary: 0.1, relating: 0.9, mutual: 0.0 } }
+                6: { focus: 'complete-change', weights: { primary: 0.1, relating: 0.9, mutual: 0 } }
             },
             // 梅花派（互卦權重高）
             meihua: {
-                0: { focus: 'judgment', weights: { primary: 0.8, relating: 0.0, mutual: 0.2 } },
+                0: { focus: 'judgment', weights: { primary: 0.8, relating: 0, mutual: 0.2 } },
                 1: { focus: 'line', weights: { primary: 0.6, relating: 0.2, mutual: 0.2 } },
                 2: { focus: 'both-lines', weights: { primary: 0.5, relating: 0.25, mutual: 0.25 } },
                 3: { focus: 'transition', weights: { primary: 0.35, relating: 0.35, mutual: 0.3 } },
@@ -149,7 +226,7 @@ export class RuleEngineLayer {
             },
             // 工程派（動態平衡）
             engineering: {
-                0: { focus: 'judgment', weights: { primary: 1.0, relating: 0.0, mutual: 0.0 } },
+                0: { focus: 'judgment', weights: { primary: 1, relating: 0, mutual: 0 } },
                 1: { focus: 'line', weights: { primary: 0.6, relating: 0.3, mutual: 0.1 } },
                 2: { focus: 'both-lines', weights: { primary: 0.5, relating: 0.35, mutual: 0.15 } },
                 3: { focus: 'transition', weights: { primary: 0.35, relating: 0.35, mutual: 0.3 } },

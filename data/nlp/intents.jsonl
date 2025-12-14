@@ -1,0 +1,8 @@
+{"text": "我該不該換工作？現在主管很刁，薪資也卡住了", "intent": "decide", "confidence": 0.85, "domain": "career", "urgency": 0.7, "agency": 0.6, "riskScore": 0.45}
+{"text": "Should we invest heavily in customer retention or focus on acquisition?", "intent": "choose_one", "confidence": 0.78, "domain": "business", "urgency": 0.5, "agency": 0.7, "riskScore": 0.35}
+{"text": "什麼時候適合啟動新專案？", "intent": "timing", "confidence": 0.82, "domain": "project", "urgency": 0.6, "agency": 0.5, "riskScore": 0.4}
+{"text": "How can I improve my team's productivity?", "intent": "strategy", "confidence": 0.75, "domain": "business", "urgency": 0.4, "agency": 0.8, "riskScore": 0.3}
+{"text": "為什麼我的產品銷量一直下滑？", "intent": "diagnose", "confidence": 0.8, "domain": "business", "urgency": 0.7, "agency": 0.5, "riskScore": 0.6}
+{"text": "Should I wait for the market to stabilize before expanding?", "intent": "timing", "confidence": 0.85, "domain": "business", "urgency": 0.6, "agency": 0.7, "riskScore": 0.5}
+{"text": "我和合夥人的關係出問題了，該怎麼處理？", "intent": "relationship", "confidence": 0.8, "domain": "business", "urgency": 0.8, "agency": 0.6, "riskScore": 0.65}
+{"text": "這個投資機會的風險有多大？", "intent": "risk", "confidence": 0.9, "domain": "money", "urgency": 0.7, "agency": 0.5, "riskScore": 0.7}

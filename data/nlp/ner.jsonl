@@ -1,0 +1,4 @@
+{"text": "我們有50萬預算，團隊3個人，現有專案還有2個月交付", "entities": [{"type": "money", "text": "50萬", "value": 500000, "span": [3, 6]}, {"type": "numeric", "text": "3個人", "value": 3, "span": [10, 13]}, {"type": "temporal", "text": "2個月", "span": [22, 25]}]}
+{"text": "Should we launch in Q2 or wait until Q4?", "entities": [{"type": "temporal", "text": "Q2", "span": [20, 22]}, {"type": "temporal", "text": "Q4", "span": [36, 38]}]}
+{"text": "我們的月活躍用戶從5000降到3000，怎麼辦？", "entities": [{"type": "numeric", "text": "5000", "value": 5000, "span": [10, 14]}, {"type": "numeric", "text": "3000", "value": 3000, "span": [16, 20]}]}
+{"text": "Team of 10 people, budget $200k, timeline 6 months", "entities": [{"type": "numeric", "text": "10 people", "value": 10, "span": [8, 17]}, {"type": "money", "text": "$200k", "value": 200000, "span": [26, 31]}, {"type": "temporal", "text": "6 months", "span": [42, 50]}]}

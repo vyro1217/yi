@@ -1,17 +1,17 @@
 // Question Layer: 自然語言問題 → 結構化模型
-import { QuestionNLP, EnhancedQuestionMetadata, NLPConfig } from '../nlp/QuestionNLP';
+import { QuestionNLP, NLPConfig } from '../nlp/QuestionNLP';
 import { Tracer } from '../tracing/Tracer';
 
 export interface StructuredQuestion {
     rawQuestion: string;
     context: string;           // 情境描述
     goal: string;              // 目標（what to achieve）
-    timeframe: 'immediate' | 'short' | 'mid' | 'long' | string; // 時間尺度（允許自由文本）
+    timeframe: string;         // 時間尺度
     constraints: string[];     // 限制條件
     options?: string[];        // 選項集合（若為選擇題）
-    riskPreference: 'conservative' | 'balanced' | 'aggressive' | string; // 風險偏好（允許自由文本）
+    riskPreference: string;    // 風險偏好
     
-    // NLP enhancements (optional)
+    // NLP enhancements (basic)
     verbs?: string[];
     entities?: string[];
     riskScore?: number;
@@ -19,6 +19,17 @@ export interface StructuredQuestion {
     isTrendDetected?: boolean;
     keywords?: string[];
     embedding?: number[];
+    
+    // Extended NLP features
+    intent?: string;
+    intentConfidence?: number;
+    domain?: string;
+    urgency?: number;
+    agency?: number;
+    emotionTone?: string;
+    entitiesDetailed?: any[];  // DetailedEntity[]
+    normalizedQuestion?: string;
+    optionsNormalized?: string[];
 }
 
 export class QuestionLayer {
@@ -50,6 +61,7 @@ export class QuestionLayer {
             const enhanced = this.nlp.parseText(rawQuestion, metadata);
             result = {
                 rawQuestion: enhanced.rawQuestion,
+                normalizedQuestion: enhanced.normalizedQuestion,
                 context: enhanced.context,
                 goal: enhanced.goal,
                 timeframe: enhanced.timeframe,
@@ -57,12 +69,20 @@ export class QuestionLayer {
                 riskPreference: enhanced.riskPreference,
                 verbs: enhanced.verbs,
                 entities: enhanced.entities,
+                entitiesDetailed: enhanced.entitiesDetailed,
+                intent: enhanced.intent,
+                intentConfidence: enhanced.intentConfidence,
+                domain: enhanced.domain,
+                urgency: enhanced.urgency,
+                agency: enhanced.agency,
+                emotionTone: enhanced.emotionTone,
                 riskScore: enhanced.riskScore,
                 confidence: enhanced.confidence,
                 isTrendDetected: enhanced.isTrendDetected,
                 keywords: enhanced.keywords,
                 embedding: enhanced.embedding,
-                options: metadata?.options
+                options: metadata?.options,
+                optionsNormalized: enhanced.optionsNormalized
             };
         } else {
             // Fallback to simple parsing
