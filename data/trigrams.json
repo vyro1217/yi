@@ -1,0 +1,10 @@
+{
+  "111": { "lines": ["YANG","YANG","YANG"], "name": "乾", "symbol": "☰", "keywords": ["創造","力量","天"] },
+  "000": { "lines": ["YIN","YIN","YIN"], "name": "坤", "symbol": "☷", "keywords": ["接受","養育","地"] },
+  "100": { "lines": ["YANG","YIN","YIN"], "name": "震", "symbol": "☳", "keywords": ["動","開始","雷"] },
+  "001": { "lines": ["YIN","YIN","YANG"], "name": "巽", "symbol": "☴", "keywords": ["順","滲透","風"] },
+  "010": { "lines": ["YIN","YANG","YIN"], "name": "坎", "symbol": "☵", "keywords": ["險","流動","水"] },
+  "101": { "lines": ["YANG","YIN","YANG"], "name": "離", "symbol": "☲", "keywords": ["明","依附","火"] },
+  "110": { "lines": ["YANG","YANG","YIN"], "name": "艮", "symbol": "☶", "keywords": ["止","穩定","山"] },
+  "011": { "lines": ["YIN","YANG","YANG"], "name": "兌", "symbol": "☱", "keywords": ["悅","交流","澤"] }
+}

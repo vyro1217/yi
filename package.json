@@ -1,0 +1,15 @@
+{
+  "name": "iching-engine-sample",
+  "version": "0.1.0",
+  "description": "Sample template-based I Ching decision engine (TypeScript, seedable casting, Traditional Chinese)",
+  "main": "dist/runSample.js",
+  "scripts": {
+    "build": "tsc",
+    "start:sample": "node dist/runSample.js",
+    "test": "node dist/runSample.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.2",
+    "typescript": "^5.0.0"
+  }
+}
