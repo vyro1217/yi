@@ -5,6 +5,8 @@ import { HexagramLayer, HexagramStructure } from './layers/HexagramLayer';
 import { InterpretationLayer } from './layers/InterpretationLayer';
 import { RuleEngineLayer, StrategyProfile } from './layers/RuleEngineLayer';
 import { OutputLayer, DecisionOutput } from './layers/OutputLayer';
+import { Tracer, TraceOptions, TraceEvent } from './tracing/Tracer';
+import { NLPConfig } from './nlp/QuestionNLP';
 
 export interface DecisionEngineOptions {
     castingMethod?: 'three-coins' | 'yarrow-stalk' | 'timestamp' | CastingMethod;
@@ -12,6 +14,10 @@ export interface DecisionEngineOptions {
     strategyProfile?: StrategyProfile;
     language?: 'zh-TW' | 'en';
     dataPath?: string;
+    
+    // New options
+    trace?: boolean | TraceOptions;  // Enable tracing
+    nlp?: NLPConfig;                 // NLP configuration
 }
 
 export interface DecisionEngineResult {
@@ -28,6 +34,9 @@ export interface DecisionEngineResult {
     // 元資訊
     timestamp: number;
     seed?: number;
+    
+    // New fields
+    trace?: TraceEvent[];  // Trace log if enabled
 }
 
 export class DecisionEngine {
@@ -37,6 +46,11 @@ export class DecisionEngine {
     constructor(options?: DecisionEngineOptions) {
         this.interpretation = new InterpretationLayer(options?.dataPath);
         this.ruleEngine = new RuleEngineLayer();
+        
+        // Configure NLP if provided
+        if (options?.nlp) {
+            QuestionLayer.configureNLP(options.nlp);
+        }
     }
 
     // 核心方法：執行完整決策管線
@@ -48,28 +62,38 @@ export class DecisionEngine {
         const lang = options?.language || 'zh-TW';
         const profile = options?.strategyProfile || 'engineering';
 
+        // Initialize tracer if enabled
+        let tracer: Tracer | undefined;
+        if (options?.trace) {
+            const traceOpts = typeof options.trace === 'boolean' 
+                ? { enabled: true } 
+                : options.trace;
+            tracer = new Tracer(traceOpts);
+        }
+
         // Layer 1: Question
-        const question = QuestionLayer.parse(rawQuestion, questionMetadata);
+        const question = QuestionLayer.parse(rawQuestion, questionMetadata, tracer);
 
         // Layer 2: Casting
         const casting = this.getCastingMethod(options);
-        const lines = CastingLayer.cast(casting);
+        const lines = CastingLayer.cast(casting, tracer);
 
         // Layer 3: Hexagram
-        const hexStruct = HexagramLayer.compute(lines);
+        const hexStruct = HexagramLayer.compute(lines, tracer);
 
         // Layer 4: Interpretation
         const hexData = this.interpretation.getAll(
             hexStruct.primaryKey,
             hexStruct.relatingKey,
-            hexStruct.mutualKey
+            hexStruct.mutualKey,
+            tracer
         );
 
         // Layer 5: Rule Engine
-        const ruleOutput = this.ruleEngine.analyze(hexStruct, question, profile);
+        const ruleOutput = this.ruleEngine.analyze(hexStruct, question, profile, tracer);
 
         // Layer 6: Output
-        const decision = OutputLayer.generate(question, hexData, ruleOutput, lang);
+        const decision = OutputLayer.generate(question, hexData, ruleOutput, lang, tracer);
 
         return {
             question,
@@ -77,7 +101,8 @@ export class DecisionEngine {
             hexStruct,
             decision,
             timestamp: Date.now(),
-            seed: (casting as any).seed
+            seed: (casting as any).seed,
+            trace: tracer?.getTrace()
         };
     }
 
@@ -111,7 +136,8 @@ export {
     HexagramLayer,
     InterpretationLayer,
     RuleEngineLayer,
-    OutputLayer
+    OutputLayer,
+    Tracer
 };
 
 export type {
@@ -119,5 +145,7 @@ export type {
     Line,
     HexagramStructure,
     DecisionOutput,
-    StrategyProfile
+    StrategyProfile,
+    TraceEvent,
+    TraceOptions
 };

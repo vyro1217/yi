@@ -1,6 +1,8 @@
 // Interpretation Layer: 解釋資料索引（純資料層）
 import fs from 'fs';
 import path from 'path';
+import { Tracer } from '../tracing/Tracer';
+import { TenWings, LineAnnotation } from '../types';
 
 export interface HexagramData {
     number: number;
@@ -9,6 +11,8 @@ export interface HexagramData {
     lineTexts: string[];   // 爻辭（6 條）
     tags: string[];        // 語義標籤
     semantics: HexagramSemantics;  // 語義資訊
+    tenWings?: TenWings;           // 十翼
+    lineAnnotations?: LineAnnotation[];  // 爻辭註釋
 }
 
 export interface HexagramSemantics {
@@ -36,10 +40,11 @@ export class InterpretationLayer {
         this.semanticsDB = this.loadDefaultSemantics();
     }
 
-    getHexagram(key: string): HexagramData {
+    getHexagram(key: string, tracer?: Tracer): HexagramData {
         const hex = this.hexDB.get(key);
         if (!hex) {
             console.warn(`Hexagram ${key} not found, using default.`);
+            tracer?.add('Interpretation', { key, found: false }, 'Hexagram not found, using default');
             return {
                 number: 0,
                 name: '未知',
@@ -50,13 +55,24 @@ export class InterpretationLayer {
             };
         }
         const semantics = this.semanticsDB.get(hex.number) || this.getDefaultSemantics();
+        
+        tracer?.add('Interpretation', { 
+            key, 
+            number: hex.number, 
+            name: hex.name,
+            tags: hex.tags,
+            hasTenWings: !!(hex as any).tenWings
+        }, 'Hexagram data retrieved');
+        
         return { 
             number: hex.number,
             name: hex.name,
             judgment: hex.judgment,
             lineTexts: hex.lineTexts,
             tags: hex.tags || [],
-            semantics 
+            semantics,
+            tenWings: (hex as any).tenWings,
+            lineAnnotations: (hex as any).lineAnnotations
         };
     }
 
@@ -146,11 +162,13 @@ export class InterpretationLayer {
     }
 
     // 批次取得（主卦、變卦、互卦）
-    getAll(primaryKey: string, relatingKey: string, mutualKey: string) {
+    getAll(primaryKey: string, relatingKey: string, mutualKey: string, tracer?: Tracer) {
+        tracer?.add('Interpretation', { primaryKey, relatingKey, mutualKey }, 'Loading hexagram data for all keys');
+        
         return {
-            primary: this.getHexagram(primaryKey),
-            relating: this.getHexagram(relatingKey),
-            mutual: this.getHexagram(mutualKey)
+            primary: this.getHexagram(primaryKey, tracer),
+            relating: this.getHexagram(relatingKey, tracer),
+            mutual: this.getHexagram(mutualKey, tracer)
         };
     }
 }

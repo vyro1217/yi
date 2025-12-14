@@ -1,5 +1,7 @@
 // Casting Layer: 起卦/抽樣層（支援多種方式）
 import { createPRNG } from '../utils/prng';
+import { Tracer } from '../tracing/Tracer';
+
 export type LineValue = 6 | 7 | 8 | 9;
 
 export interface Line {
@@ -73,12 +75,23 @@ export class CastingLayer {
     }
 
     // 執行起卦
-    static cast(method: CastingMethod): Line[] {
+    static cast(method: CastingMethod, tracer?: Tracer): Line[] {
+        tracer?.add('Casting', { method: method.name, seed: method.seed }, 'Starting casting');
+        
         const lines: Line[] = [];
+        const rolls: LineValue[] = [];
+        
         for (let pos = 1; pos <= 6; pos++) {
             const value = method.roll(pos);
             lines.push(this.parseLine(value, pos));
+            rolls.push(value);
         }
+        
+        tracer?.add('Casting', { 
+            rolls, 
+            lines: lines.map(l => ({ position: l.position, value: l.value, isMoving: l.isMoving })) 
+        }, 'Casting completed');
+        
         return lines;
     }
 

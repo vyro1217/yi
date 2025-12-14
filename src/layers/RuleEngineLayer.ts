@@ -2,6 +2,7 @@
 import { HexagramData, HexagramSemantics } from './InterpretationLayer';
 import { HexagramStructure } from './HexagramLayer';
 import { StructuredQuestion } from './QuestionLayer';
+import { Tracer } from '../tracing/Tracer';
 
 export type StrategyProfile = 'zhuxi' | 'meihua' | 'engineering';
 
@@ -41,8 +42,11 @@ export class RuleEngineLayer {
     analyze(
         hexStruct: HexagramStructure,
         question: StructuredQuestion,
-        profile: StrategyProfile = 'engineering'
+        profile: StrategyProfile = 'engineering',
+        tracer?: Tracer
     ): RuleEngineOutput {
+        tracer?.add('Rule', { profile, movingLines: hexStruct.movingLines }, 'Starting rule engine analysis');
+        
         const movingCount = hexStruct.movingLines.length as 0 | 1 | 2 | 3 | 4 | 5 | 6;
         const strategy = this.strategies[profile][movingCount];
 
@@ -55,13 +59,24 @@ export class RuleEngineLayer {
         // 計算信心度（依動爻數與問題清晰度）
         const confidence = this.calculateConfidence(movingCount, question);
 
-        return {
+        const output = {
             strategy,
             weights: strategy.weights,
             keyLines,
             focusHexagram,
             confidence
         };
+
+        tracer?.add('Rule', {
+            movingCount,
+            strategy: strategy.focus,
+            weights: strategy.weights,
+            keyLines,
+            focusHexagram,
+            confidence
+        }, 'Rule engine analysis complete');
+
+        return output;
     }
 
     // 選關鍵爻（朱熹派/工程派策略）

@@ -1,0 +1,29 @@
+{
+  "zhuxi": {
+    "0": { "focus": "judgment", "weights": { "primary": 1.0, "relating": 0.0, "mutual": 0.0 } },
+    "1": { "focus": "line", "weights": { "primary": 0.7, "relating": 0.2, "mutual": 0.1 } },
+    "2": { "focus": "both-lines", "weights": { "primary": 0.6, "relating": 0.3, "mutual": 0.1 } },
+    "3": { "focus": "transition", "weights": { "primary": 0.4, "relating": 0.4, "mutual": 0.2 } },
+    "4": { "focus": "relating", "weights": { "primary": 0.3, "relating": 0.5, "mutual": 0.2 } },
+    "5": { "focus": "major-change", "weights": { "primary": 0.2, "relating": 0.7, "mutual": 0.1 } },
+    "6": { "focus": "complete-change", "weights": { "primary": 0.1, "relating": 0.9, "mutual": 0.0 } }
+  },
+  "meihua": {
+    "0": { "focus": "judgment", "weights": { "primary": 0.8, "relating": 0.0, "mutual": 0.2 } },
+    "1": { "focus": "line", "weights": { "primary": 0.6, "relating": 0.2, "mutual": 0.2 } },
+    "2": { "focus": "both-lines", "weights": { "primary": 0.5, "relating": 0.25, "mutual": 0.25 } },
+    "3": { "focus": "transition", "weights": { "primary": 0.35, "relating": 0.35, "mutual": 0.3 } },
+    "4": { "focus": "relating", "weights": { "primary": 0.3, "relating": 0.4, "mutual": 0.3 } },
+    "5": { "focus": "major-change", "weights": { "primary": 0.2, "relating": 0.5, "mutual": 0.3 } },
+    "6": { "focus": "complete-change", "weights": { "primary": 0.1, "relating": 0.7, "mutual": 0.2 } }
+  },
+  "engineering": {
+    "0": { "focus": "judgment", "weights": { "primary": 1.0, "relating": 0.0, "mutual": 0.0 } },
+    "1": { "focus": "line", "weights": { "primary": 0.6, "relating": 0.3, "mutual": 0.1 } },
+    "2": { "focus": "both-lines", "weights": { "primary": 0.5, "relating": 0.35, "mutual": 0.15 } },
+    "3": { "focus": "transition", "weights": { "primary": 0.35, "relating": 0.35, "mutual": 0.3 } },
+    "4": { "focus": "relating", "weights": { "primary": 0.25, "relating": 0.5, "mutual": 0.25 } },
+    "5": { "focus": "major-change", "weights": { "primary": 0.15, "relating": 0.65, "mutual": 0.2 } },
+    "6": { "focus": "complete-change", "weights": { "primary": 0.1, "relating": 0.8, "mutual": 0.1 } }
+  }
+}

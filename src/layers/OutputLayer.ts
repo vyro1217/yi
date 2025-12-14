@@ -2,6 +2,7 @@
 import { HexagramData, HexagramSemantics } from './InterpretationLayer';
 import { RuleEngineOutput } from './RuleEngineLayer';
 import { StructuredQuestion } from './QuestionLayer';
+import { Tracer } from '../tracing/Tracer';
 
 export interface DecisionOutput {
     // 核心決策
@@ -49,8 +50,11 @@ export class OutputLayer {
         question: StructuredQuestion,
         hexData: { primary?: HexagramData; relating?: HexagramData; mutual?: HexagramData },
         ruleOutput: RuleEngineOutput,
-        lang: 'zh-TW' | 'en' = 'zh-TW'
+        lang: 'zh-TW' | 'en' = 'zh-TW',
+        tracer?: Tracer
     ): DecisionOutput {
+        tracer?.add('Output', { lang, confidence: ruleOutput.confidence }, 'Generating decision output');
+        
         // 決定行動建議
         const action = this.decideAction(hexData, ruleOutput, question);
         
@@ -72,7 +76,7 @@ export class OutputLayer {
         // 推論摘要
         const reasoning = this.generateReasoning(hexData, ruleOutput, question, lang);
 
-        return {
+        const output = {
             action,
             timing,
             actionList,
@@ -82,6 +86,16 @@ export class OutputLayer {
             confidence: ruleOutput.confidence,
             reasoning
         };
+
+        tracer?.add('Output', {
+            action,
+            timing,
+            actionItemsCount: actionList.length,
+            risksCount: risks.length,
+            signalsCount: signals.length
+        }, 'Decision output generated');
+
+        return output;
     }
 
     private static decideAction(

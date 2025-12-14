@@ -1,11 +1,13 @@
 {
   "name": "iching-engine-sample",
-  "version": "0.1.0",
-  "description": "Sample template-based I Ching decision engine (TypeScript, seedable casting, Traditional Chinese)",
-  "main": "dist/runSample.js",
+  "version": "0.2.0",
+  "description": "Enhanced I Ching decision engine with NLP, tracing, KPI signals, and configurable strategies (TypeScript)",
+  "main": "dist/DecisionEngine.js",
   "scripts": {
     "build": "tsc",
     "start:sample": "node dist/runSample.js",
+    "start:demo": "node dist/runNewDemo.js",
+    "start:enhanced": "node dist/runEnhancedDemo.js",
     "test": "node dist/runSample.js"
   },
   "devDependencies": {

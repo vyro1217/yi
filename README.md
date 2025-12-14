@@ -1,9 +1,14 @@
 # 易經決策引擎 (I Ching Decision Engine)
 
-**6 層管線架構 + 工程化決策輸出**
+**6 層管線架構 + 工程化決策輸出 + 增強功能**
+
+> 🆕 **v0.2.0**: 新增 NLP 解析、追蹤日誌、KPI 信號分析、十翼支援、可配置策略！
+> 
+> 詳見 [ENHANCED_FEATURES.md](ENHANCED_FEATURES.md) 和 [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
 
 ## 特色
 
+### 核心功能
 - **6 層可抽換管線**：Question → Casting → Hexagram → Interpretation → RuleEngine → Output
 - **三種策略檔案**：朱熹（傳統）、梅花（互卦）、Engineering（平衡）
 - **動爻智能處理**：0-6 動爻自動權重融合（主卦/變卦/互卦）
@@ -11,12 +16,24 @@
 - **可種子化起卦**：三枚銅錢法、蓍草法、時間戳，支援確定性隨機
 - **繁體中文 + 英文**：完整 64 卦 + 爻辭、多語言模板
 
+### 🆕 增強功能 (v0.2.0)
+- **🔍 解釋追蹤 (Tracing)**：完整決策推理日誌，可審計、可除錯
+- **🧠 NLP 問題解析**：自動提取動詞、實體、風險分數、趨勢偵測
+- **📚 十翼支援**：結構化彖傳、象傳等傳統註釋（資料結構已建）
+- **📊 KPI 信號模型**：量化時間序列分析，結合數據與智慧
+- **⚙️ 可配置策略**：JSON 設定檔，支援自訂策略與學習（訓練器待實作）
+
 ## 快速開始
 
 ```bash
 npm install
 npm run build
+
+# 基本範例
 node dist/runNewDemo.js
+
+# 🆕 增強功能示範
+npm run start:enhanced
 ```
 
 ## 架構

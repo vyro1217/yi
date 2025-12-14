@@ -1,0 +1,68 @@
+[
+  {
+    "kpiId": "user_churn_rate",
+    "description": "Monthly user churn rate",
+    "direction": "lower",
+    "thresholds": {
+      "good": 0.05,
+      "warning": 0.10,
+      "bad": 0.20
+    },
+    "window": 3
+  },
+  {
+    "kpiId": "net_promoter_score",
+    "description": "Net Promoter Score (NPS)",
+    "direction": "higher",
+    "thresholds": {
+      "good": 30,
+      "warning": 0,
+      "bad": -30
+    },
+    "window": 3
+  },
+  {
+    "kpiId": "monthly_revenue",
+    "description": "Monthly recurring revenue",
+    "direction": "higher",
+    "thresholds": {
+      "good": 100000,
+      "warning": 50000,
+      "bad": 20000
+    },
+    "window": 6
+  },
+  {
+    "kpiId": "customer_acquisition_cost",
+    "description": "Cost to acquire new customer",
+    "direction": "lower",
+    "thresholds": {
+      "good": 100,
+      "warning": 200,
+      "bad": 500
+    },
+    "window": 3
+  },
+  {
+    "kpiId": "team_velocity",
+    "description": "Development team velocity (story points per sprint)",
+    "direction": "higher",
+    "thresholds": {
+      "good": 50,
+      "warning": 30,
+      "bad": 15
+    },
+    "window": 4
+  },
+  {
+    "kpiId": "system_uptime",
+    "description": "System uptime percentage",
+    "direction": "higher",
+    "thresholds": {
+      "good": 0.999,
+      "warning": 0.99,
+      "bad": 0.95
+    },
+    "window": 7
+  }
+]

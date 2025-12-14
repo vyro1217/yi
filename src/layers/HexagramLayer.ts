@@ -1,5 +1,6 @@
 // Hexagram Layer: 卦象運算層
 import { Line } from './CastingLayer';
+import { Tracer } from '../tracing/Tracer';
 
 export interface HexagramBits {
     primary: number;    // 本卦（6 bits: 0~63）
@@ -20,7 +21,9 @@ export interface HexagramStructure {
 
 export class HexagramLayer {
     // 從 6 爻計算卦象
-    static compute(lines: Line[]): HexagramStructure {
+    static compute(lines: Line[], tracer?: Tracer): HexagramStructure {
+        tracer?.add('Hexagram', { linesCount: lines.length }, 'Computing hexagram structure');
+        
         // 1. 本卦（primary）
         const primaryBits = this.linesToBits(lines.map(l => l.polarity));
         const primaryKey = this.bitsToKey(primaryBits);
@@ -48,7 +51,7 @@ export class HexagramLayer {
         const mutualBits = this.linesToBits(mutualPolarities);
         const mutualKey = this.bitsToKey(mutualBits);
 
-        return {
+        const result = {
             bits: { primary: primaryBits, relating: relatingBits, mutual: mutualBits },
             movingLines,
             primaryKey,
@@ -58,6 +61,18 @@ export class HexagramLayer {
             relatingNumber: relatingBits + 1,
             mutualNumber: mutualBits + 1
         };
+
+        tracer?.add('Hexagram', {
+            primaryKey,
+            relatingKey,
+            mutualKey,
+            movingLines,
+            primaryNumber: result.primaryNumber,
+            relatingNumber: result.relatingNumber,
+            mutualNumber: result.mutualNumber
+        }, 'Hexagram structure computed');
+
+        return result;
     }
 
     // 爻陣列 → bits（初爻為 bit0）
