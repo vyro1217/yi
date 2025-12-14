@@ -8,6 +8,10 @@ export interface NLPConfig {
     detectTrend?: boolean;
     useChineseTokenizer?: boolean;  // Enable Chinese word segmentation (requires nodejieba)
     deterministicNormalization?: boolean;  // Ensure reproducible normalization
+    weakLabelExport?: {
+        enabled?: boolean;
+        path?: string; // relative path to output jsonl
+    };
     embeddings?: {
         provider?: 'openai' | 'local';
         apiKey?: string;

@@ -1,4 +1,5 @@
 import { DecisionEngine } from './DecisionEngine';
+import { QuestionLayer } from './layers/QuestionLayer';
 
 // 測試場景 1：專案決策
 async function demo1() {
@@ -215,3 +216,7 @@ async function main() {
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
+// Ensure batcher flush on exit
+process.on('exit', () => {
+    (async () => { try { await (QuestionLayer as any).shutdown(); } catch {} })();
+});

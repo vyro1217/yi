@@ -1,0 +1,6 @@
+{"timestamp":1765729105725,"question":"應該立刻啟動新專案，還是等到 Q2？","intentCandidates":[{"intent":"decide","confidence":0.4722222222222222}]}
+{"timestamp":1765729105739,"question":"我們該用 Microservices 還是 Monolith？","intentCandidates":[{"intent":"decide","confidence":0.4722222222222222}]}
+{"timestamp":1765729105751,"question":"生產環境 CPU 飆到 95%，該立即 rollback 還是先加機器？","intentCandidates":[{"intent":"decide","confidence":0.4722222222222222}]}
+{"timestamp":1765729169879,"question":"應該立刻啟動新專案，還是等到 Q2？","intentCandidates":[{"intent":"decide","confidence":0.4722222222222222}]}
+{"timestamp":1765729169891,"question":"我們該用 Microservices 還是 Monolith？","intentCandidates":[{"intent":"decide","confidence":0.4722222222222222}]}
+{"timestamp":1765729169900,"question":"生產環境 CPU 飆到 95%，該立即 rollback 還是先加機器？","intentCandidates":[{"intent":"decide","confidence":0.4722222222222222}]}

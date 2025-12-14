@@ -1,6 +1,7 @@
 // Question Layer: 自然語言問題 → 結構化模型
 import { QuestionNLP, NLPConfig } from '../nlp/QuestionNLP';
 import { Tracer } from '../tracing/Tracer';
+import { WeakLabelBatcher, WeakLabelBatcherOptions } from '../utils/WeakLabelBatcher';
 
 export interface StructuredQuestion {
     rawQuestion: string;
@@ -35,6 +36,7 @@ export interface StructuredQuestion {
 export class QuestionLayer {
     private static nlp: QuestionNLP | null = null;
     private static nlpConfig: NLPConfig = {};
+    private static weakLabelBatcher: WeakLabelBatcher | null = null;
 
     /**
      * Configure NLP features
@@ -42,6 +44,20 @@ export class QuestionLayer {
     static configureNLP(config: NLPConfig): void {
         this.nlpConfig = config;
         this.nlp = new QuestionNLP(config);
+        // configure batcher if weakLabelExport options provided
+        const w = (config as any).weakLabelExport;
+        if (w && w.enabled) {
+            const opts: WeakLabelBatcherOptions = {
+                outFile: w.path || 'weak_labels_output.jsonl'
+            };
+            this.weakLabelBatcher = new WeakLabelBatcher(opts);
+        }
+    }
+
+    static async shutdown(): Promise<void> {
+        if (this.weakLabelBatcher) {
+            await this.weakLabelBatcher.shutdown();
+        }
     }
 
     /**
@@ -87,24 +103,15 @@ export class QuestionLayer {
                 optionsNormalized: enhanced.optionsNormalized
             };
 
-            // Export weak-labels asynchronously if intentCandidates present and weakLabelExport enabled
-            (async () => {
-                try {
-                    const ic = (enhanced as any).intentCandidates;
-                    const config = (this.nlpConfig || {}) as any;
-                    if (ic && Array.isArray(ic) && ic.length > 0 && config.weakLabelExport && config.weakLabelExport.enabled) {
-                        const fs = require('fs').promises;
-                        const path = require('path');
-                        const outDir = path.join(__dirname, '..', 'data', 'nlp', 'weak_labels');
-                        await fs.mkdir(outDir, { recursive: true });
-                        const outPath = path.join(outDir, (config.weakLabelExport.path) ? config.weakLabelExport.path : 'weak_labels_output.jsonl');
-                        const entry = { timestamp: Date.now(), question: rawQuestion, intentCandidates: ic };
-                        await fs.appendFile(outPath, JSON.stringify(entry) + '\n');
-                    }
-                } catch (e) {
-                    // ignore file write errors in async worker
+            // Enqueue weak-labels to batcher if present
+            try {
+                const ic = (enhanced as any).intentCandidates;
+                if (ic && Array.isArray(ic) && ic.length > 0 && this.weakLabelBatcher) {
+                    this.weakLabelBatcher.enqueue({ timestamp: Date.now(), question: rawQuestion, intentCandidates: ic });
                 }
-            })();
+            } catch (e) {
+                // ignore
+            }
         } else {
             // Fallback to simple parsing
             result = {

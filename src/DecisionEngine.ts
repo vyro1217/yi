@@ -112,14 +112,35 @@ export class DecisionEngine {
                 }
             }
 
-            // Merge KPI signals into decision.signals (avoid duplicates)
+            // Merge KPI signals into decision.signals (dedupe by kpiId+type)
             const existing = decision.signals || [];
-            const merged = [...existing];
+            const merged: any[] = [...existing];
+            const seen = new Set<string>();
+            for (const s of merged) {
+                const key = `${s.kpiId || ''}::${s.type || ''}`;
+                seen.add(key);
+            }
             for (const ks of kpiSignals) {
-                // simple dedupe by description
-                if (!merged.some((m: any) => m.description === ks.description)) merged.push(ks as any);
+                const key = `${ks.kpiId || ''}::${ks.type || ''}`;
+                if (!seen.has(key)) {
+                    merged.push(ks as any);
+                    seen.add(key);
+                }
             }
             decision = { ...decision, signals: merged };
+
+            // Adjust overall decision confidence based on KPI confidences
+            const kpiConfs = kpiSignals.map(s => s.confidence || 0).filter(c => c > 0);
+            if (kpiConfs.length > 0) {
+                const avgKpiConf = kpiConfs.reduce((a,b)=>a+b,0)/kpiConfs.length;
+                // alpha: how much to weigh KPIs into overall confidence
+                let alpha = 0.2;
+                if ((options as any)?.riskPreference === 'conservative') alpha = 0.15;
+                if ((options as any)?.riskPreference === 'aggressive') alpha = 0.3;
+
+                const blended = Math.max(0, Math.min(1, decision.confidence * (1 - alpha) + avgKpiConf * alpha));
+                decision = { ...decision, confidence: blended };
+            }
         }
 
         return {

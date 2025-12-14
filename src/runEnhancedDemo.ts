@@ -248,3 +248,7 @@ console.log('  - Review data/strategies.json to customize interpretation strateg
 console.log('  - Configure NLP with embeddings/LLM for deeper semantic analysis');
 console.log('  - Implement StrategyTrainer for learning from historical decisions\n');
 })().catch(err => { console.error(err); process.exit(1); });
+// Ensure batcher flush on exit
+process.on('exit', () => {
+    (async () => { try { await (QuestionLayer as any).shutdown(); } catch {} })();
+});
