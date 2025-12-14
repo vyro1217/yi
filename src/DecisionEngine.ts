@@ -7,6 +7,8 @@ import { RuleEngineLayer, StrategyProfile } from './layers/RuleEngineLayer';
 import { OutputLayer, DecisionOutput } from './layers/OutputLayer';
 import { Tracer, TraceOptions, TraceEvent } from './tracing/Tracer';
 import { NLPConfig } from './nlp/QuestionNLP';
+import { SignalModel } from './signals/SignalModel';
+import { Signal } from './types';
 
 export interface DecisionEngineOptions {
     castingMethod?: 'three-coins' | 'yarrow-stalk' | 'timestamp' | CastingMethod;
@@ -18,6 +20,8 @@ export interface DecisionEngineOptions {
     // New options
     trace?: boolean | TraceOptions;  // Enable tracing
     nlp?: NLPConfig;                 // NLP configuration
+    kpiDefs?: any[]; // optional KPI definitions to evaluate
+    kpiSeries?: any[]; // optional KPI time series to evaluate
 }
 
 export interface DecisionEngineResult {
@@ -54,11 +58,11 @@ export class DecisionEngine {
     }
 
     // 核心方法：執行完整決策管線
-    run(
+    async run(
         rawQuestion: string,
         questionMetadata?: Partial<StructuredQuestion>,
         options?: DecisionEngineOptions
-    ): DecisionEngineResult {
+    ): Promise<DecisionEngineResult> {
         const lang = options?.language || 'zh-TW';
         const profile = options?.strategyProfile || 'engineering';
 
@@ -72,7 +76,7 @@ export class DecisionEngine {
         }
 
         // Layer 1: Question
-        const question = QuestionLayer.parse(rawQuestion, questionMetadata, tracer);
+        const question = await QuestionLayer.parse(rawQuestion, questionMetadata, tracer) as any;
 
         // Layer 2: Casting
         const casting = this.getCastingMethod(options);
@@ -93,7 +97,30 @@ export class DecisionEngine {
         const ruleOutput = this.ruleEngine.analyze(hexStruct, question, profile, tracer);
 
         // Layer 6: Output
-        const decision = OutputLayer.generate(question, hexData, ruleOutput, lang, tracer);
+        let decision = OutputLayer.generate(question, hexData, ruleOutput, lang, tracer);
+
+        // If KPI defs/series provided, evaluate and merge KPI signals
+        if (options?.kpiDefs && options?.kpiSeries) {
+            const signalModel = new SignalModel(options.kpiDefs as any);
+            const kpiSignals: Signal[] = [];
+            for (const series of options.kpiSeries as any[]) {
+                try {
+                    const s = signalModel.evaluateKPIAsSignal(series);
+                    kpiSignals.push(s);
+                } catch (e) {
+                    // ignore single KPI failures
+                }
+            }
+
+            // Merge KPI signals into decision.signals (avoid duplicates)
+            const existing = decision.signals || [];
+            const merged = [...existing];
+            for (const ks of kpiSignals) {
+                // simple dedupe by description
+                if (!merged.some((m: any) => m.description === ks.description)) merged.push(ks as any);
+            }
+            decision = { ...decision, signals: merged };
+        }
 
         return {
             question,

@@ -1,7 +1,7 @@
 import { DecisionEngine } from './DecisionEngine';
 
 // 測試場景 1：專案決策
-function demo1() {
+async function demo1() {
     console.log('\n=== 場景 1：專案啟動決策（工程策略 + NLP） ===\n');
 
     const engine = new DecisionEngine({
@@ -14,7 +14,7 @@ function demo1() {
         }
     });
     
-    const result = engine.run(
+    const result = await engine.run(
         '應該立刻啟動新專案，還是等到 Q2？',
         {
             context: '團隊有 3 個人，預算 50 萬，現有專案還有 2 個月交付',
@@ -36,11 +36,11 @@ function demo1() {
 }
 
 // 測試場景 2：技術選型
-function demo2() {
+async function demo2() {
     console.log('\n=== 場景 2：技術選型決策（朱熹策略） ===\n');
 
     const engine = new DecisionEngine();
-    const result = engine.run(
+    const result = await engine.run(
         '我們該用 Microservices 還是 Monolith？',
         {
             context: '團隊 5 人，產品處於 MVP 階段，預計 1 年內規模擴大 3 倍',
@@ -62,11 +62,11 @@ function demo2() {
 }
 
 // 測試場景 3：危機應對
-function demo3() {
+async function demo3() {
     console.log('\n=== 場景 3：生產環境危機（梅花策略） ===\n');
 
     const engine = new DecisionEngine();
-    const result = engine.run(
+    const result = await engine.run(
         '生產環境 CPU 飆到 95%，該立即 rollback 還是先加機器？',
         {
             context: '線上 10 萬用戶受影響，團隊正在調查根因，上次部署在 2 小時前',
@@ -203,11 +203,15 @@ function printResult(result: any) {
 }
 
 // 執行所有測試
-console.log('易經決策引擎 - 6 層管線測試');
-console.log('Engine: DecisionEngine (Question → Casting → Hexagram → Interpretation → RuleEngine → Output)');
+async function main() {
+    console.log('易經決策引擎 - 6 層管線測試');
+    console.log('Engine: DecisionEngine (Question → Casting → Hexagram → Interpretation → RuleEngine → Output)');
 
-demo1();
-demo2();
-demo3();
+    await demo1();
+    await demo2();
+    await demo3();
 
-console.log('\n\n✨ 完成！所有場景已執行。');
+    console.log('\n\n✨ 完成！所有場景已執行。');
+}
+
+main().catch(err => { console.error(err); process.exit(1); });

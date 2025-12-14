@@ -32,11 +32,36 @@ const engine = new DecisionEngine({
 });
 
 const question1 = 'Should I launch our new product feature next month, or wait for more user feedback?';
-const result1 = engine.run(question1, {
+(async () => {
+    const kpiDefsPath = path.join(__dirname, '..', 'data', 'kpis.json');
+    const kpiDefs = JSON.parse(fs.readFileSync(kpiDefsPath, 'utf-8'));
+
+    const churnRateSeries = {
+        kpiId: 'user_churn_rate',
+        values: [0.08, 0.09, 0.11, 0.13, 0.15, 0.18],
+        timestamps: [1, 2, 3, 4, 5, 6]
+    };
+
+    const npsSeries = {
+        kpiId: 'net_promoter_score',
+        values: [25, 28, 32, 35, 38, 42],
+        timestamps: [1, 2, 3, 4, 5, 6]
+    };
+
+    const revenueSeries = {
+        kpiId: 'monthly_revenue',
+        values: [45000, 47000, 46000, 48000, 47500, 48500],
+        timestamps: [1, 2, 3, 4, 5, 6]
+    };
+
+    const result1 = await engine.run(question1, {
     context: 'Product development decision for SaaS startup',
     riskPreference: 'balanced',
     timeframe: 'short'
-});
+    }, {
+        kpiDefs,
+        kpiSeries: [churnRateSeries, npsSeries, revenueSeries]
+    });
 
 console.log('\n📋 Question Analysis:');
 console.log('  Raw:', result1.question.rawQuestion);
@@ -106,7 +131,7 @@ if (result1.trace) {
 // ============================================================
 console.log('\n\n--- Demo 2: NLP Question Analysis ---');
 
-QuestionLayer.configureNLP({
+    QuestionLayer.configureNLP({
     extractVerbs: true,
     extractEntities: true,
     computeRiskScore: true,
@@ -119,9 +144,10 @@ const questions = [
     'Can we safely reduce our burn rate without affecting product quality?'
 ];
 
-questions.forEach((q, i) => {
+for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
     console.log(`\nQuestion ${i + 1}: "${q}"`);
-    const parsed = QuestionLayer.parse(q);
+    const parsed = await QuestionLayer.parse(q) as any;
     console.log('  → Goal:', parsed.goal);
     console.log('  → Timeframe:', parsed.timeframe);
     console.log('  → Risk Score:', parsed.riskScore?.toFixed(2));
@@ -129,36 +155,15 @@ questions.forEach((q, i) => {
     console.log('  → Keywords:', parsed.keywords?.slice(0, 5).join(', '));
     console.log('  → Trend Detected:', parsed.isTrendDetected);
     console.log('  → Confidence:', parsed.confidence?.toFixed(2));
-});
+}
 
 // ============================================================
 // Demo 3: KPI Signal Analysis
 // ============================================================
 console.log('\n\n--- Demo 3: KPI Signal Analysis ---');
 
-// Load KPI definitions
-const kpiDefsPath = path.join(__dirname, '..', 'data', 'kpis.json');
-const kpiDefs = JSON.parse(fs.readFileSync(kpiDefsPath, 'utf-8'));
+// Prepare signal model for KPI analysis (reuse kpiDefs and series declared above)
 const signalModel = new SignalModel(kpiDefs);
-
-// Simulate time series data
-const churnRateSeries = {
-    kpiId: 'user_churn_rate',
-    values: [0.08, 0.09, 0.11, 0.13, 0.15, 0.18], // increasing churn (bad)
-    timestamps: [1, 2, 3, 4, 5, 6]
-};
-
-const npsSeries = {
-    kpiId: 'net_promoter_score',
-    values: [25, 28, 32, 35, 38, 42], // increasing NPS (good)
-    timestamps: [1, 2, 3, 4, 5, 6]
-};
-
-const revenueSeries = {
-    kpiId: 'monthly_revenue',
-    values: [45000, 47000, 46000, 48000, 47500, 48500], // stable/slight growth
-    timestamps: [1, 2, 3, 4, 5, 6]
-};
 
 console.log('\n📊 KPI Signal Evaluation:\n');
 
@@ -200,7 +205,7 @@ console.log('\n📈 Trend Changes:\n');
 console.log('\n\n--- Demo 4: Integrated Decision (Question + KPI Signals) ---');
 
 const question2 = 'Should we invest heavily in customer retention or focus on acquisition?';
-const result2 = engine.run(question2, {
+const result2 = await engine.run(question2, {
     context: 'Strategic planning based on recent metrics',
     riskPreference: 'conservative',
     constraints: ['limited budget', 'Q4 target pressure']
@@ -242,3 +247,4 @@ console.log('  - Review data/kpis.json to add custom KPIs');
 console.log('  - Review data/strategies.json to customize interpretation strategies');
 console.log('  - Configure NLP with embeddings/LLM for deeper semantic analysis');
 console.log('  - Implement StrategyTrainer for learning from historical decisions\n');
+})().catch(err => { console.error(err); process.exit(1); });

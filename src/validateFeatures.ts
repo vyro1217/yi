@@ -8,25 +8,26 @@ console.log('🧪 IChing Engine - Feature Validation\n');
 let passed = 0;
 let failed = 0;
 
-// Test 1: Tracing
-try {
-    const engine = new DecisionEngine();
-    const result = engine.run('Test question', {}, { trace: true });
-    if (result.trace && result.trace.length > 0) {
-        console.log('✅ Tracing: Works');
-        passed++;
-    } else {
-        throw new Error('No trace events');
+(async () => {
+    // Test 1: Tracing
+    try {
+        const engine = new DecisionEngine();
+        const result = await engine.run('Test question', {}, { trace: true } as any);
+        if (result.trace && result.trace.length > 0) {
+            console.log('✅ Tracing: Works');
+            passed++;
+        } else {
+            throw new Error('No trace events');
+        }
+    } catch (e) {
+        console.log('❌ Tracing: Failed -', (e as Error).message);
+        failed++;
     }
-} catch (e) {
-    console.log('❌ Tracing: Failed -', (e as Error).message);
-    failed++;
-}
 
 // Test 2: NLP
 try {
     QuestionLayer.configureNLP({ extractVerbs: true, extractEntities: true });
-    const parsed = QuestionLayer.parse('Should I launch the product now or wait?');
+    const parsed = await QuestionLayer.parse('Should I launch the product now or wait?') as any;
     if (parsed.verbs && parsed.verbs.length > 0 && parsed.confidence) {
         console.log('✅ NLP: Works');
         console.log('   Extracted:', parsed.verbs.slice(0, 3).join(', '));
@@ -66,12 +67,12 @@ try {
 // Test 4: Integration
 try {
     const engine = new DecisionEngine({ nlp: { extractVerbs: true } });
-    const result = engine.run('Integration test question', {
+    const result = await engine.run('Integration test question', {
         riskPreference: 'balanced'
     }, {
         trace: { enabled: true, verbosity: 'minimal' },
         strategyProfile: 'engineering'
-    });
+    } as any);
     if (result.question.verbs && result.trace && result.decision.action) {
         console.log('✅ Full Integration: Works');
         console.log('   Decision:', result.decision.action, '| Confidence:', result.decision.confidence.toFixed(2));
@@ -84,15 +85,16 @@ try {
     failed++;
 }
 
-// Summary
-console.log('\n' + '='.repeat(50));
-console.log(`Tests Passed: ${passed}/4`);
-console.log(`Tests Failed: ${failed}/4`);
+    // Summary
+    console.log('\n' + '='.repeat(50));
+    console.log(`Tests Passed: ${passed}/4`);
+    console.log(`Tests Failed: ${failed}/4`);
 
-if (failed === 0) {
-    console.log('\n🎉 All features validated successfully!');
-    process.exit(0);
-} else {
-    console.log('\n⚠️  Some features need attention');
-    process.exit(1);
-}
+    if (failed === 0) {
+        console.log('\n🎉 All features validated successfully!');
+        process.exit(0);
+    } else {
+        console.log('\n⚠️  Some features need attention');
+        process.exit(1);
+    }
+})();
