@@ -1,38 +1,11 @@
 import { Line, LineType } from './types';
-
-// Simple xorshift32 PRNG for deterministic results from a seed
-class XorShift32 {
-    private state: number;
-    constructor(seed: number) {
-        this.state = seed >>> 0;
-        if (this.state === 0) this.state = 0xdeadbeef;
-    }
-    next(): number {
-        let x = this.state;
-        x ^= x << 13;
-        x ^= x >>> 17;
-        x ^= x << 5;
-        this.state = x >>> 0;
-        return this.state;
-    }
-    // return 0..1
-    nextFloat(): number {
-        return this.next() / 0xFFFFFFFF;
-    }
-}
+import { hashStringToNumber, createPRNG } from './utils/prng';
 
 // castingMethod: { roll(pos) => 6|7|8|9 }
 export function makeSeededCastingMethod(seed?: number | string) {
-    let s = 0;
-    if (seed === undefined) {
-        s = Math.floor(Math.random() * 0xffffffff);
-    } else if (typeof seed === 'number') s = seed;
-    else s = hashStringToNumber(seed);
-
-    const prng = new XorShift32(s);
+    const prng = createPRNG(seed);
 
     function roll(_: number): 6 | 7 | 8 | 9 {
-        // map random float to 4 outcomes (6,7,8,9)
         const r = prng.nextFloat();
         if (r < 0.25) return 6;
         if (r < 0.5) return 7;
@@ -40,16 +13,7 @@ export function makeSeededCastingMethod(seed?: number | string) {
         return 9;
     }
 
-    return { roll, seed: s };
-}
-
-function hashStringToNumber(s: string): number {
-    let h = 2166136261 >>> 0;
-    for (let i = 0; i < s.length; i++) {
-        h ^= s.charCodeAt(i);
-        h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
-    }
-    return h >>> 0;
+    return { roll, seed: (prng as any).seed };
 }
 
 export function parseCastingValue(value: 6 | 7 | 8 | 9, position: number): Line {

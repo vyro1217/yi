@@ -1,4 +1,5 @@
 // Casting Layer: 起卦/抽樣層（支援多種方式）
+import { createPRNG } from '../utils/prng';
 export type LineValue = 6 | 7 | 8 | 9;
 
 export interface Line {
@@ -10,15 +11,17 @@ export interface Line {
 
 export interface CastingMethod {
     name: string;
+    seed?: number;
     roll: (position: number) => LineValue;
 }
 
 export class CastingLayer {
     // 三枚銅錢法（機率固定）
     static threeCoins(seed?: number): CastingMethod {
-        const prng = this.makePRNG(seed);
+        const prng = createPRNG(seed);
         return {
             name: 'three-coins',
+            seed: (prng as any).seed,
             roll: (_pos) => {
                 // 三枚硬幣：3正=9(老陽), 3反=6(老陰), 2正1反=7(少陽), 2反1正=8(少陰)
                 const coins = [prng.nextInt(2), prng.nextInt(2), prng.nextInt(2)];
@@ -33,9 +36,10 @@ export class CastingLayer {
 
     // 蓍草法（機率不同）
     static yarrowStalk(seed?: number): CastingMethod {
-        const prng = this.makePRNG(seed);
+        const prng = createPRNG(seed);
         return {
             name: 'yarrow-stalk',
+            seed: (prng as any).seed,
             roll: (_pos) => {
                 // 簡化蓍草：老陽1/16、老陰3/16、少陽5/16、少陰7/16
                 const r = prng.nextInt(16);
@@ -50,9 +54,10 @@ export class CastingLayer {
     // 時間戳記法
     static timestamp(): CastingMethod {
         const ts = Date.now();
-        const prng = this.makePRNG(ts);
+        const prng = createPRNG(ts);
         return {
             name: 'timestamp',
+            seed: (prng as any).seed,
             roll: (pos) => {
                 const values: LineValue[] = [6, 7, 8, 9];
                 return values[prng.nextInt(4)];
@@ -77,18 +82,5 @@ export class CastingLayer {
         return lines;
     }
 
-    // 簡單 PRNG（xorshift32）
-    private static makePRNG(seed?: number) {
-        let state = seed !== undefined ? seed >>> 0 : Math.floor(Math.random() * 0xffffffff);
-        if (state === 0) state = 0xdeadbeef;
-        return {
-            nextInt: (max: number) => {
-                state ^= state << 13;
-                state ^= state >>> 17;
-                state ^= state << 5;
-                state = state >>> 0;
-                return state % max;
-            }
-        };
-    }
+    // makePRNG removed — use shared createPRNG util
 }
